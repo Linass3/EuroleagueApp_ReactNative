@@ -10,7 +10,8 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.linass3.EuroleagueApp-ReactNative"
+      "bundleIdentifier": "com.linass3.EuroleagueApp-ReactNative",
+      "appleTeamId": "PP4AXB6WF3"
     },
     "android": {
       "adaptiveIcon": {
