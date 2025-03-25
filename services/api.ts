@@ -1,4 +1,4 @@
-import {format} from "date-fns";
+import {differenceInCalendarYears, parseISO} from "date-fns";
 
 export const EUROLEAGUE_API_CONFIG = {
     BASE_URL: 'https://api-live.euroleague.net/v2',
@@ -82,12 +82,14 @@ export async function fetchPlayers(code: string) {
                     name: item.person.name,
                     height: item.person.height,
                     weight: item.person.weight,
-                    birthDate: item.person.birthDate,
+                    age: differenceInCalendarYears(new Date(), parseISO(item.person.birthDate)),
                     dorsal: item.dorsal,
-                    position: item.postionName,
+                    position: item.positionName,
                     image: item.images.action,
                     lastTeam: item.lastTeam,
-                    code: item.person.code
+                    code: item.person.code,
+                    country: item.person.country.name,
+                    teamCode: item.club.code,
                 }
             })
 

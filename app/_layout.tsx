@@ -1,8 +1,13 @@
-import { Stack } from "expo-router";
+import {Stack} from "expo-router";
 import './global.css'
+import {Text, TouchableOpacity} from "react-native";
+import {useContext} from "react";
+import {SettingsContext} from "@/utils/SettingsContext";
 
 export default function RootLayout() {
-  return (
+    const settingContext = useContext(SettingsContext);
+
+    return (
         <Stack>
             <Stack.Screen
                 name="index"
@@ -12,6 +17,15 @@ export default function RootLayout() {
                     },
                     headerTintColor: 'white',
                     title: 'Euroleague',
+                    headerRight: () => (
+                        <TouchableOpacity
+                            onPress={() => (
+                                settingContext?.changeViewType
+                            )}
+                        >
+                            <Text className="text-white text-xl font-medium">text</Text>
+                        </TouchableOpacity>
+                    )
                 }}
             />
 
@@ -37,5 +51,5 @@ export default function RootLayout() {
                 }}
             />
         </Stack>
-)
+    )
 }

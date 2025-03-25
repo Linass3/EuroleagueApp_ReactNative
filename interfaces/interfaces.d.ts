@@ -16,11 +16,12 @@ interface Player {
     name: string;
     height: number;
     weight: number;
-    birthDate: string;
+    age: string;
     dorsal: string;
     position: string;
-    image: string;
+    image?: string;
     country: string;
     lastTeam: string;
     code: string;
+    teamCode: string;
 }

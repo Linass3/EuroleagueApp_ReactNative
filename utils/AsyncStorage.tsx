@@ -11,7 +11,7 @@ export const storeObject = async (key: string, object: any) => {
 
 export const getObject = async (key: string) => {
     try {
-        const value = await AsyncStorage.getItem(`@${key}`);
+        const value = await AsyncStorage.getItem(`${key}`);
         if (value !== null) {
             return JSON.parse(value);
         }

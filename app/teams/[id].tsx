@@ -1,29 +1,64 @@
-import {View, Text, Image, ActivityIndicator, FlatList} from 'react-native'
+import {ActivityIndicator} from 'react-native'
 import React, {useEffect, useState} from 'react'
-import {useLocalSearchParams, useRouter} from "expo-router";
+import {useLocalSearchParams} from "expo-router";
 import {fetchGames, fetchPlayers, fetchTeams} from "@/services/api";
-import {LinearGradient} from "expo-linear-gradient";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
-import GameListRow from "@/components/GameListRow";
-import PlayerListRow from "@/components/PlayerListRow";
+import {getObject, storeObject} from "@/utils/AsyncStorage";
+import GameList from "@/components/GameList";
+import PlayerList from "@/components/PlayerList";
+import ImageCard from "@/components/ImageCard";
+import ErrorView from "@/components/ErrorView";
 
 const TeamDetailsView = () => {
     const {id} = useLocalSearchParams();
     const teamCode = Array.isArray(id) ? id[0] : id;
 
+    const [selectedTeam, setSelectedTeam] = useState<Team>();
     const [fetchedGames, setFetchedGames] = useState<Game[]>([]);
     const [fetchedPlayers, setFetchedPlayers] = useState<Player[]>([]);
     const [selectedTabIndex, setSelectedTabIndex] = useState(0);
 
     useEffect(() => {
         async function getGamesAndPlayers() {
-            const teams = await fetchGames(teamCode);
-            setFetchedGames(teams);
+            const savedGames = await getObject(`games-${id}`) as Game[];
+            if (savedGames) {
+                setFetchedGames(savedGames);
+                console.log('Got saved games');
+            } else {
+                const games = await fetchGames(teamCode);
+                await storeObject(`games-${id}`, games);
+                setFetchedGames(games);
+                console.log('Got fetched games and saved to storage');
+            }
 
-            const players = await fetchPlayers(teamCode);
-            setFetchedPlayers(players);
+            const savedPlayers = await getObject(`players-${id}`) as Player[];
+            if (savedPlayers) {
+                setFetchedPlayers(savedPlayers);
+                console.log('Got saved players');
+            } else {
+                const players = await fetchPlayers(teamCode);
+                await storeObject(`players-${id}`, players);
+                setFetchedPlayers(players);
+                console.log('Got fetched players and saved to storage');
+            }
         }
 
+        async function getTeam() {
+            const savedTeams = await getObject('teams') as Team[];
+            if (savedTeams) {
+                const savedTeam = savedTeams.find((team) => team.code === id)
+                setSelectedTeam(savedTeam);
+                console.log('Got saved team');
+            } else {
+                const teams = await fetchTeams();
+                await storeObject(`teams`, teams);
+                const team = teams.find((team) => team.code === id);
+                setSelectedTeam(team);
+                console.log('Got fetched team and saved to storage');
+            }
+        }
+
+        getTeam();
         getGamesAndPlayers();
     }, []);
 
@@ -32,70 +67,31 @@ const TeamDetailsView = () => {
     }
 
     return (
-        <>
-            <View className="w-full h-96 justify-end">
-                <Image
-                    source={{uri: 'https://media-cdn.incrowdsports.com/0aa09358-3847-4c4e-b228-3582ee4e536d.png'}}
-                    className="w-full h-full"
-                    resizeMode="contain"
-                />
-                <LinearGradient
-                    colors={['transparent', 'black']}
+        selectedTeam ? (
+            <>
+                <ImageCard object={selectedTeam}/>
+
+                <SegmentedControl
+                    values={['Games', 'Players']}
+                    selectedIndex={selectedTabIndex}
                     style={{
-                        position: 'absolute',
-                        left: 0,
-                        right: 0,
-                        top: 'auto',
-                        height: 80,
-                        alignItems: 'flex-end',
+                        paddingHorizontal: 40,
+                        marginVertical: 20
                     }}
-                >
-                    <Text
-                        className="flex-1 text-white font-bold text-4xl mt-7 mr-5"
-                        numberOfLines={1}
-                    >
-                        {id}
-                    </Text>
-                </LinearGradient>
-            </View>
+                    onChange={(event) => {
+                        setSelectedTabIndex(event.nativeEvent.selectedSegmentIndex);
+                    }}
+                />
 
-            <SegmentedControl
-                values={['Games', 'Players']}
-                selectedIndex={selectedTabIndex}
-                style={{
-                    paddingHorizontal: 40,
-                    marginVertical: 20
-                }}
-                onChange={(event) => {
-                    setSelectedTabIndex(event.nativeEvent.selectedSegmentIndex);
-                }}
-            />
-
-            {
-                selectedTabIndex === 0 ? (
-                    <FlatList
-                        data={fetchedGames.filter((game) => !game.played)}
-                        renderItem={({item}) => (
-                            <GameListRow game={item}/>
-                        )}
-                        ItemSeparatorComponent={() => (
-                            <View className="w-full h-[0.5] bg-gray-400"/>
-                        )}
-                    />
-                ) : (
-                    <FlatList
-                        data={fetchedPlayers}
-                        renderItem={({item}) => (
-                            <PlayerListRow player={item}/>
-                        )}
-                        ItemSeparatorComponent={() => (
-                            <View className="w-full h-[0.5] bg-gray-400"/>
-                        )}
-                        keyExtractor={(item) => item.code}
-                    />
-                )
-            }
-        </>
+                {
+                    selectedTabIndex === 0
+                        ? (<GameList fetchedGames={fetchedGames} selectedTeam={selectedTeam}/>)
+                        : (<PlayerList fetchedPlayers={fetchedPlayers}/>)
+                }
+            </>
+        ) : (
+            <ErrorView text={'Error: team could not be fetched!'}/>
+        )
     )
 }
 export default TeamDetailsView

@@ -1,15 +1,23 @@
 import {ActivityIndicator, FlatList, TouchableOpacity,} from "react-native";
 import {fetchTeams} from "@/services/api";
-import {useEffect, useState} from "react";
+import {useContext, useEffect, useLayoutEffect, useState} from "react";
 import TeamCard from "@/components/TeamCard";
-import {Link} from "expo-router";
 import {getObject, storeObject} from "@/utils/AsyncStorage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {SettingsContext} from "@/utils/SettingsContext";
 
 export default function index() {
+    const settingContext = useContext(SettingsContext);
     const [fetchedTeams, setFetchedTeams] = useState<Team[]>([]);
+
+    useLayoutEffect(() => {
+        
+    }, []);
 
     useEffect(() => {
         async function getTeams() {
+            await AsyncStorage.clear();
+
             const savedTeams = await getObject('teams') as Team[];
             if (savedTeams) {
                 setFetchedTeams(savedTeams);
