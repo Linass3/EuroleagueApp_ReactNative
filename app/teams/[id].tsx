@@ -20,16 +20,7 @@ const TeamDetailsView = () => {
 
     useEffect(() => {
         async function getGamesAndPlayers() {
-            const savedGames = await getObject(`games-${id}`) as Game[];
-            if (savedGames) {
-                setFetchedGames(savedGames);
-                console.log('Got saved games');
-            } else {
-                const games = await fetchGames(teamCode);
-                await storeObject(`games-${id}`, games);
-                setFetchedGames(games);
-                console.log('Got fetched games and saved to storage');
-            }
+
 
             const savedPlayers = await getObject(`players-${id}`) as Player[];
             if (savedPlayers) {
