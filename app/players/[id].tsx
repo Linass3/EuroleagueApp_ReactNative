@@ -1,12 +1,9 @@
-import {View, Text, Image, FlatList} from 'react-native'
-import React, {useEffect, useState} from 'react'
-import {useLocalSearchParams} from "expo-router";
-import {LinearGradient} from "expo-linear-gradient";
+import {View, Text, FlatList, ActivityIndicator} from 'react-native'
+import React, {useCallback, useState} from 'react'
+import {useFocusEffect, useLocalSearchParams} from "expo-router";
 import PlayerDetailsListRow from "@/components/PlayerDetailsListRow";
-import {getObject, storeObject} from "@/utils/AsyncStorage";
-import {fetchPlayers} from "@/services/api";
 import ImageCard from "@/components/ImageCard";
-import ErrorView from "@/components/ErrorView";
+import {getSinglePlayer} from "@/utils/FetchUtility";
 
 const PlayerDetailsView = () => {
     const {id, teamId} = useLocalSearchParams();
@@ -14,26 +11,18 @@ const PlayerDetailsView = () => {
     const teamCode = Array.isArray(teamId) ? teamId[0] : teamId;
     const [fetchedPlayer, setFetchedPlayer] = useState<Player>();
 
-    useEffect(() => {
-        async function getPlayer() {
-            const savedPlayers = await getObject(`players-${teamCode}`) as Player[];
-            if (savedPlayers) {
-                const savedPlayer = savedPlayers.find((player) => player.code === playerCode)
-                setFetchedPlayer(savedPlayer);
-                console.log('Got saved player');
+    useFocusEffect(
+        useCallback(() => {
+            async function fetchAllData() {
+                const player = await getSinglePlayer(fetchedPlayer === undefined, teamCode, playerCode);
+                if (player) {
+                    setFetchedPlayer(player);
+                }
             }
 
-            if (fetchedPlayer) {
-                const players = await fetchPlayers(teamCode);
-                await storeObject(`players-${teamCode}`, players);
-                const player = players.find((player) => player.code === playerCode);
-                setFetchedPlayer(player);
-                console.log('Got fetched player and saved to storage');
-            }
-        }
-
-        getPlayer();
-    }, []);
+            fetchAllData();
+        }, [])
+    );
 
     const playerDetails = [
         {
@@ -79,7 +68,9 @@ const PlayerDetailsView = () => {
                 />
             </>
         ) : (
-            <ErrorView text={'Error: player could not be fetched!'}/>
+            <View className="flex-1 justify-center items-center">
+                <ActivityIndicator size="large" color="#000000"/>
+            </View>
         )
     )
 }

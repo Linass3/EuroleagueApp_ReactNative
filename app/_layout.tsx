@@ -1,16 +1,22 @@
 import {Stack} from "expo-router";
 import './global.css'
 import {Text, TouchableOpacity} from "react-native";
-import {useContext} from "react";
-import {SettingsContext} from "@/utils/SettingsContext";
-import UpdateTimeContextProvider, {UpdateTimeContext} from "@/utils/UpdateTimesContext";
+import {SettingsProvider, useSettings} from "@/utils/SettingsContext";
 
-export default function RootLayout() {
-
+function HeaderRightButton() {
+    const {isTeamsViewList, setIsTeamsViewList} = useSettings();
 
     return (
+        <TouchableOpacity onPress={() => setIsTeamsViewList((previousValue) => !previousValue)}>
+            <Text className="text-white text-xl font-medium">{isTeamsViewList ? 'Grid' : 'List'}</Text>
+        </TouchableOpacity>
+    );
+}
+
+export default function RootLayout() {
+    return (
         <>
-            <UpdateTimeContextProvider>
+            <SettingsProvider>
                 <Stack>
                     <Stack.Screen
                         name="index"
@@ -20,15 +26,7 @@ export default function RootLayout() {
                             },
                             headerTintColor: 'white',
                             title: 'Euroleague',
-                            headerRight: () => (
-                                <TouchableOpacity
-                                    // onPress={() => (
-                                    //     updateTimesContext?.setLastUpdateTime
-                                    // )}
-                                >
-                                    <Text className="text-white text-xl font-medium">text</Text>
-                                </TouchableOpacity>
-                            )
+                            headerRight: () => <HeaderRightButton/>
                         }}
                     />
 
@@ -54,7 +52,7 @@ export default function RootLayout() {
                         }}
                     />
                 </Stack>
-            </UpdateTimeContextProvider>
+            </SettingsProvider>
         </>
     )
 }

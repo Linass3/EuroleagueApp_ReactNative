@@ -1,23 +1,25 @@
-import {createContext, ReactNode, useState} from "react";
+import {createContext, Dispatch, ReactNode, SetStateAction, useContext, useState} from "react";
 
 interface SettingsContextType {
-    isList: boolean;
-    changeViewType: () => void;
+    isTeamsViewList: boolean;
+    setIsTeamsViewList: Dispatch<SetStateAction<boolean>>
 }
 
-export const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
+const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
-export default function SettingsContextProvider({children}: { children: ReactNode }) {
-    const [isTeamsViewList, setIsTeamsViewList] = useState(true);
-
-    function changeTeamsViewType() {
-        setIsTeamsViewList((list) => !list);
+function useSettings(): SettingsContextType {
+    const context = useContext(SettingsContext);
+    if (!context) {
+        throw new Error('useSettings must be used within SettingsContextProvider');
     }
 
-    const value = {
-        isList: isTeamsViewList,
-        changeViewType: changeTeamsViewType,
-    }
-
-    return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
+    return context;
 }
+
+function SettingsProvider(props: { children: ReactNode }) {
+    const [isTeamsViewList, setIsTeamsViewList] = useState<boolean>(false);
+
+    return <SettingsContext.Provider {...props} value={{isTeamsViewList, setIsTeamsViewList}}/>
+}
+
+export {SettingsProvider, useSettings};

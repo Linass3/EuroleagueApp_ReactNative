@@ -1,64 +1,47 @@
-import {ActivityIndicator} from 'react-native'
-import React, {useEffect, useState} from 'react'
-import {useLocalSearchParams} from "expo-router";
-import {fetchGames, fetchPlayers, fetchTeams} from "@/services/api";
+import {ActivityIndicator, View} from 'react-native'
+import React, {useCallback, useState} from 'react'
+import {useFocusEffect, useLocalSearchParams} from "expo-router";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
-import {getObject, storeObject} from "@/utils/AsyncStorage";
 import GameList from "@/components/GameList";
 import PlayerList from "@/components/PlayerList";
 import ImageCard from "@/components/ImageCard";
-import ErrorView from "@/components/ErrorView";
+import {getGames, getPlayers, getSingleTeam} from "@/utils/FetchUtility";
 
 const TeamDetailsView = () => {
     const {id} = useLocalSearchParams();
     const teamCode = Array.isArray(id) ? id[0] : id;
 
     const [selectedTeam, setSelectedTeam] = useState<Team>();
-    const [fetchedGames, setFetchedGames] = useState<Game[]>([]);
-    const [fetchedPlayers, setFetchedPlayers] = useState<Player[]>([]);
+    const [fetchedGames, setFetchedGames] = useState<Game[] | undefined>(undefined);
+    const [fetchedPlayers, setFetchedPlayers] = useState<Player[] | undefined>(undefined);
     const [selectedTabIndex, setSelectedTabIndex] = useState(0);
 
-    useEffect(() => {
-        async function getGamesAndPlayers() {
+    useFocusEffect(
+        useCallback(() => {
+            async function fetchAllData() {
+                const team = await getSingleTeam(!selectedTeam, teamCode);
+                if (team) {
+                    setSelectedTeam(team);
+                }
 
+                const games = await getGames(!fetchedGames, teamCode);
+                if (games) {
+                    setFetchedGames(games);
+                }
 
-            const savedPlayers = await getObject(`players-${id}`) as Player[];
-            if (savedPlayers) {
-                setFetchedPlayers(savedPlayers);
-                console.log('Got saved players');
-            } else {
-                const players = await fetchPlayers(teamCode);
-                await storeObject(`players-${id}`, players);
-                setFetchedPlayers(players);
-                console.log('Got fetched players and saved to storage');
+                const players = await getPlayers(!fetchedPlayers, teamCode);
+                if (players) {
+                    setFetchedPlayers(players);
+                }
             }
-        }
 
-        async function getTeam() {
-            const savedTeams = await getObject('teams') as Team[];
-            if (savedTeams) {
-                const savedTeam = savedTeams.find((team) => team.code === id)
-                setSelectedTeam(savedTeam);
-                console.log('Got saved team');
-            } else {
-                const teams = await fetchTeams();
-                await storeObject(`teams`, teams);
-                const team = teams.find((team) => team.code === id);
-                setSelectedTeam(team);
-                console.log('Got fetched team and saved to storage');
-            }
-        }
+            fetchAllData();
+        }, [])
+    );
 
-        getTeam();
-        getGamesAndPlayers();
-    }, []);
-
-    if (!fetchedGames) {
-        return <ActivityIndicator size="large" color="#000000"/>
-    }
 
     return (
-        selectedTeam ? (
+        selectedTeam && fetchedGames && fetchedPlayers ? (
             <>
                 <ImageCard object={selectedTeam}/>
 
@@ -81,8 +64,9 @@ const TeamDetailsView = () => {
                 }
             </>
         ) : (
-            <ErrorView text={'Error: team could not be fetched!'}/>
-        )
+            <View className="flex-1 justify-center items-center">
+                <ActivityIndicator size="large" color="#000000"/>
+            </View>)
     )
 }
 export default TeamDetailsView

@@ -9,17 +9,12 @@ const GameList = ({fetchedGames, selectedTeam}: { fetchedGames: Game[], selected
     const [refreshing, setRefreshing] = React.useState(false);
 
     async function refreshGames() {
-        console.log("refreshing games");
         setRefreshing(true);
-        console.log("refreshing games 2");
         const newGames = await fetchGames(selectedTeam.code)
-        console.log("refreshing games 3");
 
         await AsyncStorage.removeItem(`games-${selectedTeam.code}`)
-        console.log("refreshing games 4");
 
         await storeObject(`games-${selectedTeam.code}`, newGames);
-        console.log("refreshing games 5");
 
         fetchedGames = newGames;
         setRefreshing(false);
