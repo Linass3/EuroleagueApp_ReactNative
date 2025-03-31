@@ -1,7 +1,7 @@
 import {ActivityIndicator, FlatList, View} from "react-native";
 import React, {useCallback, useState} from "react";
 import TeamCard from "@/components/TeamCard";
-import {Link, useFocusEffect} from "expo-router";
+import {useFocusEffect} from "expo-router";
 import {getTeams} from "@/utils/FetchUtility";
 import {useSettings} from "@/utils/SettingsContext";
 import TeamCardGrid from "@/components/TeamCardGrid";
